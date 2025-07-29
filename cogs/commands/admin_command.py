@@ -4,7 +4,7 @@ from discord.ext import commands
 from discord import app_commands
 import traceback
 from datetime import datetime, timedelta
-from discord.ext import commands
+from discord.ui import Button, View
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.cron import CronTrigger
 
@@ -98,6 +98,38 @@ class AdminCommand(commands.Cog):
             logging.error(f"경고 역할 부여 중 오류 발생: {tb}")
             await interaction.response.send_message("**[error]** 경고 역할 부여 중 오류가 발생했습니다.", ephemeral=True)
             return
+
+    @app_commands.command(name="봇-종료", description="봇을 종료합니다.(위험한 명령어이므로 신중하게 사용하세요.)")
+    @app_commands.default_permissions(administrator=True)
+    async def shutdown(self, interaction: discord.Interaction):
+
+        user = f"{interaction.user.display_name}[{interaction.user.id}]"
+        yes_button = Button(label="예", style=discord.ButtonStyle.danger)
+        no_button = Button(label="아니오", style=discord.ButtonStyle.secondary)
+        logging.info(f"봇-종료 사용됨 - {user}")
+
+        async def yes_callback(interaction: discord.Interaction):
+            await message.delete()
+            await interaction.channel.send("봇을 종료합니다.")
+            logging.info("봇이 종료됩니다.")
+            await self.bot.close()
+
+        async def no_callback(interaction: discord.Interaction):
+            await message.delete()
+            await interaction.channel.send("봇 종료가 취소되었습니다.")
+            logging.info("봇 종료가 취소되었습니다.")
+
+        yes_button.callback = yes_callback
+        no_button.callback = no_callback
+
+        view = View()
+        view.add_item(yes_button)
+        view.add_item(no_button)
+
+        await interaction.response.defer()
+        message = await interaction.followup.send("봇을 정말로 종료하시겠습니까? 이 작업은 되돌릴 수 없습니다.", view=view)
+        logging.debug(f"message: {message.id}")
+        message = await interaction.channel.fetch_message(message.id)
 
     @app_commands.command(name="경고-갱신", description="경고가 만료된 유저를 갱신합니다.(매일 정오에 작동되므로 가급적 사용하지 마세요.)")
     @app_commands.default_permissions(administrator=True)

@@ -85,7 +85,7 @@ class EventCommand(commands.Cog):
         await interaction.response.send_message("성공적으로 이벤트id가 지정 되었습니다.", ephemeral=True)
         logging.info(f"이벤트-지정 사용됨 - {user}\n 지정된 이벤트 ID: {이벤트id}")
 
-    @app_commands.command(name="랜덤추첨", description="서버 내 사용자 중 랜덤으로 추첨합니다.")
+    @app_commands.command(name="랜덤추첨", description="이벤트 참여자 중 랜덤으로 추첨합니다.")
     @app_commands.default_permissions(administrator=True)
     async def randomPeople(self, interaction: discord.Interaction):
 
