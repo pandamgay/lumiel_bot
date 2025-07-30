@@ -7,6 +7,31 @@ import os
 import traceback
 import pymysql
 
+# TODO: 스타일 리팩터링
+'''
+주석도 쫌 달고
+너무 긴건 줄바꿈도 좀 해서
+전체적으로 일관성있게
+딱 읽기좋게
+쿼리도 싹다 줄바꿈 잘 하셈
+로그 구조도 확실하게 하나로 맞춰서
+함수 시작할 때 시작 로그
+중간에 에러나면 예외에다 에러났다고 응답하고 로그
+성공 실패 있는 명령어면 성공실패 로그에 찍고 이유
+시작할 때 \n찍어서 매개변수 보여주면 됨
+로그가 중요함 레벨도 딱 정확한 기준을 잡고 리팩터링 해야함
+내용도 그렇고
+'''
+
+# TODO: 임베드 적용
+'''
+사용자 명령어 위주로 임베드 적용
+지금 보면 사용자 명령어들에 점점 보여지는 정보가 늘어나고 있음
+임베드 써야할듯
+관리자 명령어는 잘 보고 넣을지 말지 보셈
+솔까 귀찮아서 안넣을 것 같긴 함ㅇㅇ
+'''
+
 is_infologging = True if input("로그 레벨을 INFO로 설정하시겠습니까? (Y/N): ").lower() in ['y', 'Y'] else False
 
 # 로그 디렉토리 생성
@@ -67,16 +92,20 @@ async def on_ready():
         cursor = db.cursor()
 
         bot.shared_data = {
-            "GUILD_ID": 1383768206635962501, # 서버 ID
-            "ENTRY_LOG_CHANNEL_ID": 1384501387211313222, # 입장 로그 채널 ID
-            "CHECK_MESSAGE_ID": 1388526152351744061, # 인증 메시지 ID
-            "PEOPLE_COUNT_CHANNEL_ID": 1388573766719901796,
-            "event_message_id": int, # 이벤트 메시지 ID
-            "INVITE_LOG_CHANNEL_ID": 1390313743564406785, # 초대로그 채널 ID
-            "CURSOR": cursor,  # DB 커서
-            "PROMOTION_LOG_CHANNEL_ID": 1384518652841295912, # 승급 로그 채널 ID
-            "BEN_LOG_CHANNEL_ID": 1398123190999580672, # 벤 로그 채널 ID
-            "DB": db,  # DB 연결 객체
+            "GUILD_ID": 1383768206635962501,                     # 서버 ID
+            "ENTRY_LOG_CHANNEL_ID": 1384501387211313222,         # 입장 로그 채널 ID
+            "CHECK_MESSAGE_ID": 1388526152351744061,             # 인증 메시지 ID
+            "PEOPLE_COUNT_CHANNEL_ID": 1388573766719901796,      # 인원수 채널 ID
+            "event_message_id": int,                             # 이벤트 메시지 ID
+            "INVITE_LOG_CHANNEL_ID": 1390313743564406785,        # 초대로그 채널 ID
+            "CURSOR": cursor,                                    # DB 커서
+            "PROMOTION_LOG_CHANNEL_ID": 1384518652841295912,     # 승급 로그 채널 ID
+            "BEN_LOG_CHANNEL_ID": 1398123190999580672,           # 벤 로그 채널 ID
+            "DB": db,                                            # DB 연결 객체
+            "is_auction": False,                                 # 경매 활성화 여부
+            "current_price": 0,                                  # 현재 경매 가격
+            "increase_amount_price": 0,                          # 경매 상승폭
+            "winner_id": 0                                       # 낙찰자 id
         }
 
         await bot.tree.sync()
