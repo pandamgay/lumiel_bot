@@ -60,7 +60,7 @@ class AdminCommand(commands.Cog):
         기간="경고 기간 (기본값: 30일)"
     )
     @app_commands.default_permissions(administrator=True)
-    async def addWarn(self, interaction: discord.Interaction, 부여할_유저: discord.Member, 사유: str, 기간: int = 30):
+    async def addWarn(self, interaction: discord.Interaction, 유저: discord.Member, 사유: str, 기간: int = 30):
 
         shared = self.bot.shared_data
         cursor = shared["CURSOR"]
@@ -68,7 +68,7 @@ class AdminCommand(commands.Cog):
         user = f"{interaction.user.display_name}[{interaction.user.id}]"
         channel = self.bot.get_channel(shared["BEN_LOG_CHANNEL_ID"])
         guild = interaction.guild
-        logging.info(f"경고-부여 사용됨 - {user}\n 유저: {부여할_유저.display_name}({부여할_유저.id}), 사유: {사유}, 기간: {기간}일")
+        logging.info(f"경고-부여 사용됨 - {user}\n 유저: {유저.display_name}({유저.id}), 사유: {사유}, 기간: {기간}일")
         role = guild.get_role(1398122039776383038)
         logging.debug(role)
 
@@ -77,18 +77,23 @@ class AdminCommand(commands.Cog):
             await interaction.response.send_message("**[error}** 경고 역할을 찾을 수 없습니다.", ephemeral=True)
             return
         try:
-            await 부여할_유저.add_roles(role)
-            logging.info(f"{부여할_유저.display_name}({부여할_유저.id})에게 경고 역할을 성공적으로 부여했습니다.")
+            if role in 유저.roles:
+                logging.warning(f"{유저.display_name}({유저.id})는 이미 경고 역할을 가지고 있습니다.")
+                await interaction.response.send_message(f"{유저.mention}님은 이미 경고 역할을 가지고 있습니다.\n"
+                                                        f"2회 경고는 밴 대상입니다. 조치 바랍니다.", ephemeral=True)
+                return
+            await 유저.add_roles(role)
+            logging.info(f"{유저.display_name}({유저.id})에게 경고 역할을 성공적으로 부여했습니다.")
             until = datetime.now() + timedelta(days=기간)
             fomatted_time = until.strftime("%Y-%m-%d")
-            cursor.execute(f"UPDATE users SET warn_until = '{fomatted_time}' WHERE discord_user_id = {부여할_유저.id};")
+            cursor.execute(f"UPDATE users SET warn_until = '{fomatted_time}' WHERE discord_user_id = {유저.id};")
             db.commit()
             await channel.send(f"# 경고\n"
-                         f"유저: {부여할_유저.mention}\n"
+                         f"유저: {유저.mention}\n"
                          f"사유: {사유}\n"
                          f"기간: {기간}일\n"
                          f"자세한 사항은 {interaction.user.mention}님에게 문의해주세요.")
-            await interaction.response.send_message(f"{부여할_유저.mention}님에게 경고를 부여했습니다.")
+            await interaction.response.send_message(f"{유저.mention}님에게 경고를 부여했습니다.")
         except discord.Forbidden:
             logging.error("경고 역할을 부여할 권한이 없습니다. 권한을 확인해주세요.")
             await interaction.response.send_message("**[error]** 경고 역할을 부여할 권한이 없습니다.", ephemeral=True)
