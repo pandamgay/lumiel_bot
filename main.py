@@ -32,6 +32,11 @@ import pymysql
 솔까 귀찮아서 안넣을 것 같긴 함ㅇㅇ
 '''
 
+# TODO: utill모듈 만들기
+'''
+재사용성 생각해서 로그나 에러같은거 만들기
+'''
+
 is_infologging = True if input("로그 레벨을 INFO로 설정하시겠습니까? (Y/N): ").lower() in ['y', 'Y'] else False
 
 # 로그 디렉토리 생성
