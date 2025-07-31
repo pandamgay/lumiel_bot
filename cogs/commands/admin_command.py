@@ -55,7 +55,7 @@ class AdminCommand(commands.Cog):
 
     @app_commands.command(name="경고-부여", description="유저에게 경고를 부여합니다.")
     @app_commands.describe(
-        부여할_유저="경고를 부여할 유저",
+        유저="경고를 부여할 유저",
         사유="경고 사유",
         기간="경고 기간 (기본값: 30일)"
     )
