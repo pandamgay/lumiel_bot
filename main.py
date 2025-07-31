@@ -35,6 +35,9 @@ import pymysql
 # TODO: utill모듈 만들기
 '''
 재사용성 생각해서 로그나 에러같은거 만들기
+로그는 로그 발생지 에러인지 뭔지 시작인지 끝인지 어쩌구 그런거 보기
+위에 "utill 모듈로 뺌"되있는거 보고 저런 상황에 쓰일 로그 만들기
+에러 처리는 메시지 보내는 정도 될듯 이거도 재사용성보고 나중에 짤 때 생각하면 됨
 '''
 
 is_infologging = True if input("로그 레벨을 INFO로 설정하시겠습니까? (Y/N): ").lower() in ['y', 'Y'] else False
