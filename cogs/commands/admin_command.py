@@ -68,43 +68,63 @@ class AdminCommand(commands.Cog):
         user = f"{interaction.user.display_name}[{interaction.user.id}]"
         channel = self.bot.get_channel(shared["BEN_LOG_CHANNEL_ID"])
         guild = interaction.guild
-        logging.info(f"경고-부여 사용됨 - {user}\n 유저: {유저.display_name}({유저.id}), 사유: {사유}, 기간: {기간}일")
+        logging.info(
+            f"경고-부여 사용됨 - {user}\n"
+            f"유저: {유저.display_name}({유저.id}), 사유: {사유}, 기간: {기간}일"
+        )
         role = guild.get_role(1398122039776383038)
         logging.debug(role)
 
         if not role:
             logging.error("경고 역할을 찾을 수 없습니다. 역할 ID를 확인해주세요.")
-            await interaction.response.send_message("**[error}** 경고 역할을 찾을 수 없습니다.", ephemeral=True)
+            await interaction.response.send_message(
+                "**[error}** 경고 역할을 찾을 수 없습니다.", ephemeral=True
+            )
             return
         try:
             if role in 유저.roles:
                 logging.warning(f"{유저.display_name}({유저.id})는 이미 경고 역할을 가지고 있습니다.")
-                await interaction.response.send_message(f"{유저.mention}님은 이미 경고 역할을 가지고 있습니다.\n"
-                                                        f"2회 경고는 밴 대상입니다. 조치 바랍니다.", ephemeral=True)
+                await interaction.response.send_message(
+                    f"{유저.mention}님은 이미 경고 역할을 가지고 있습니다.\n"
+                    f"2회 경고는 밴 대상입니다. 조치 바랍니다.", ephemeral=True
+                )
                 return
             await 유저.add_roles(role)
             logging.info(f"{유저.display_name}({유저.id})에게 경고 역할을 성공적으로 부여했습니다.")
             until = datetime.now() + timedelta(days=기간)
             fomatted_time = until.strftime("%Y-%m-%d")
-            cursor.execute(f"UPDATE users SET warn_until = '{fomatted_time}' WHERE discord_user_id = {유저.id};")
+            cursor.execute(
+                f"UPDATE users "
+                f"SET warn_until = '{fomatted_time}' "
+                f"WHERE discord_user_id = {유저.id};"
+            ) # 경고 기간 저장
             db.commit()
-            await channel.send(f"# 경고\n"
-                         f"유저: {유저.mention}\n"
-                         f"사유: {사유}\n"
-                         f"기간: {기간}일\n"
-                         f"자세한 사항은 {interaction.user.mention}님에게 문의해주세요.")
+            await channel.send(
+                f"# 경고\n"
+                f"유저: {유저.mention}\n"
+                f"사유: {사유}\n"
+                f"기간: {기간}일\n"
+                f"자세한 사항은 {interaction.user.mention}님에게 문의해주세요."
+            )
             await interaction.response.send_message(f"{유저.mention}님에게 경고를 부여했습니다.")
         except discord.Forbidden:
             logging.error("경고 역할을 부여할 권한이 없습니다. 권한을 확인해주세요.")
-            await interaction.response.send_message("**[error]** 경고 역할을 부여할 권한이 없습니다.", ephemeral=True)
+            await interaction.response.send_message(
+                "**[error]** 경고 역할을 부여할 권한이 없습니다.", ephemeral=True
+            )
             return
         except Exception as e:
             tb = traceback.format_exc()
             logging.error(f"경고 역할 부여 중 오류 발생: {tb}")
-            await interaction.response.send_message("**[error]** 경고 역할 부여 중 오류가 발생했습니다.", ephemeral=True)
+            await interaction.response.send_message(
+                "**[error]** 경고 역할 부여 중 오류가 발생했습니다.", ephemeral=True
+            )
             return
 
-    @app_commands.command(name="봇-종료", description="봇을 종료합니다.(위험한 명령어이므로 신중하게 사용하세요.)")
+    @app_commands.command(
+        name="봇-종료",
+        description="봇을 종료합니다.(위험한 명령어이므로 신중하게 사용하세요.)"
+    )
     @app_commands.default_permissions(administrator=True)
     async def shutdown(self, interaction: discord.Interaction):
 
@@ -132,11 +152,15 @@ class AdminCommand(commands.Cog):
         view.add_item(no_button)
 
         await interaction.response.defer()
-        message = await interaction.followup.send("봇을 정말로 종료하시겠습니까? 이 작업은 되돌릴 수 없습니다.", view=view)
+        message = await interaction.followup.send(
+            "봇을 정말로 종료하시겠습니까? 이 작업은 되돌릴 수 없습니다.", view=view
+        )
         logging.debug(f"message: {message.id}")
-        message = await interaction.channel.fetch_message(message.id)
 
-    @app_commands.command(name="경고-갱신", description="경고가 만료된 유저를 갱신합니다.(매일 정오에 작동되므로 가급적 사용하지 마세요.)")
+    @app_commands.command(
+        name="경고-갱신",
+        description="경고가 만료된 유저를 갱신합니다.(매일 정오에 작동되므로 가급적 사용하지 마세요.)"
+    )
     @app_commands.default_permissions(administrator=True)
     async def enforcementCheckWarn(self, interaction: discord.Interaction):
 
@@ -162,7 +186,11 @@ class AdminCommand(commands.Cog):
         for member in members_with_role:
             try:
                 i += 1
-                cursor.execute(f"SELECT warn_until FROM users WHERE discord_user_id = {member.id}")
+                cursor.execute(
+                    f"SELECT warn_until "
+                    f"FROM users "
+                    f"WHERE discord_user_id = {member.id}"
+                ) #  경고 기간 조회
                 result = cursor.fetchone()[0]
                 current_date = datetime.today().date()
                 if result < current_date:
@@ -174,9 +202,14 @@ class AdminCommand(commands.Cog):
                 tb = traceback.format_exc()
                 logging.error(f"경고 확인 중 오류 발생: {tb}")
                 j += 1
-        logging.info(f"경고 확인 완료 - {i}명의 유저 중 {k}명의 경고가 만료되었고, {j}명의 유저에서 오류가 발생했습니다.")
-        await interaction.response.send_message(f"경고 갱신이 완료되었습니다.\n"
-                                                f"{i}명의 유저 중 {k}명의 경고가 만료되었고, {j}명의 유저에서 오류가 발생했습니다.")
+        logging.info(
+            f"경고 확인 완료 - {i}명의 유저 중 {k}명의 경고가 만료되었고, "
+            f"{j}명의 유저에서 오류가 발생했습니다."
+        )
+        await interaction.response.send_message(
+            f"경고 갱신이 완료되었습니다.\n"
+            f"{i}명의 유저 중 {k}명의 경고가 만료되었고, {j}명의 유저에서 오류가 발생했습니다."
+        )
 
     async def checkWarn(self):
 
@@ -199,7 +232,11 @@ class AdminCommand(commands.Cog):
         for member in members_with_role:
             try:
                 i += 1
-                cursor.execute(f"SELECT warn_until FROM users WHERE discord_user_id = {member.id}")
+                cursor.execute(
+                    f"SELECT warn_until "
+                    f"FROM users "
+                    f"WHERE discord_user_id = {member.id}"
+                ) # 경고 기간 조회
                 result = cursor.fetchone()[0]
                 current_date = datetime.today().date()
                 if result < current_date:
@@ -211,7 +248,10 @@ class AdminCommand(commands.Cog):
                 tb = traceback.format_exc()
                 logging.error(f"경고 확인 중 오류 발생: {tb}")
                 j += 1
-        logging.info(f"경고 확인 완료 - {i}명의 유저 중 {k}명의 경고가 만료되었고, {j}명의 유저에서 오류가 발생했습니다.")
+        logging.info(
+            f"경고 확인 완료 - {i}명의 유저 중 {k}명의 경고가 만료되었고, "
+            f"{j}명의 유저에서 오류가 발생했습니다."
+        )
 
 
 async def setup(bot: commands.Bot):

@@ -23,10 +23,16 @@ class ExperienceCommand(commands.Cog):
             await interaction.response.send_message("경험치는 0 이상의 값이어야 합니다.", ephemeral=True)
             return
         try:
-            # 사용자 정보 업데이트
-            cursor.execute(f"UPDATE users SET experience = experience + {경험치} WHERE discord_user_id = {유저.id};")
+            cursor.execute(
+                f"UPDATE users "
+                f"SET experience = experience + {경험치} "
+                f"WHERE discord_user_id = {유저.id};"
+            ) # 경험치 부여
             db.commit()
-            logging.info(f"경험치-부여 사용됨 - {user}\n 유저: {유저.display_name}({유저.id}), 경험치: {경험치}")
+            logging.info(
+                f"경험치-부여 사용됨 - {user}\n"
+                f"유저: {유저.display_name}({유저.id}), 경험치: {경험치}"
+            )
             await interaction.response.send_message(f"{유저.mention}에게 {경험치} 경험치를 부여했습니다.")
         except Exception as e:
             tb = traceback.format_exc()
@@ -45,14 +51,22 @@ class ExperienceCommand(commands.Cog):
 
         # 경험치 검증
         try:
-            cursor.execute(f"SELECT experience FROM users WHERE discord_user_id = {유저.id};")
+            cursor.execute(
+                f"SELECT experience "
+                f"FROM users "
+                f"WHERE discord_user_id = {유저.id};"
+            )  # 사용자 경험치 조회
             result = cursor.fetchone()
             if result is None:
-                await interaction.response.send_message("해당 사용자가 존재하지 않습니다.", ephemeral=True)
+                await interaction.response.send_message(
+                    "해당 사용자가 존재하지 않습니다.", ephemeral=True
+                )
                 logging.warning(f"경험치-삭제 사용실패 - {user}")
                 return
             if result[0] - 경험치 < 0:
-                await interaction.response.send_message(f"{유저.mention}의경험치가 부족합니다.", ephemeral=True)
+                await interaction.response.send_message(
+                    f"{유저.mention}의 경험치가 부족합니다.", ephemeral=True
+                )
                 logging.warning(f"경험치-삭제 사용실패 - {user}")
                 return
         except Exception as e:
@@ -68,14 +82,21 @@ class ExperienceCommand(commands.Cog):
             return
         try:
             # 사용자 정보 업데이트
-            cursor.execute(f"UPDATE users SET experience = experience - {경험치} WHERE discord_user_id = {유저.id};")
+            cursor.execute(
+                f"UPDATE users "
+                f"SET experience = experience - {경험치} "
+                f"WHERE discord_user_id = {유저.id};"
+            )  # 경험치 삭제
             db.commit()
-            logging.info(f"경험치-삭제 사용됨 - {user}\n 유저: {유저.display_name}({유저.id}), 경험치: -{경험치}")
+            logging.info(
+                f"경험치-삭제 사용됨 - {user}\n"
+                f"유저: {유저.display_name}({유저.id}), 경험치: -{경험치}"
+            )
             await interaction.response.send_message(f"{유저.mention}에게 {경험치} 경험치를 삭제했습니다.")
         except Exception as e:
             tb = traceback.format_exc()
             logging.error(f"경험치 삭제 중 오류 발생: {tb}")
-            await interaction.response.send_message("오류가 발생했습니다.", ephemeral=True)
+            await interaction.response.send_message("오류가 발생했습니다.",ephemeral=True)
             return
 
     @app_commands.command(name="유저-경험치-조회", description="사용자의 경험치를 조회합니다.")
@@ -88,15 +109,27 @@ class ExperienceCommand(commands.Cog):
         user = f"{interaction.user.display_name}[{interaction.user.id}]"
 
         try:
-            cursor.execute(f"SELECT experience FROM users WHERE discord_user_id = {유저.id};")
+            cursor.execute(
+                f"SELECT experience "
+                f"FROM users "
+                f"WHERE discord_user_id = {유저.id};"
+            )  # 사용자 경험치 조회
             result = cursor.fetchone()
             if result is None:
-                await interaction.response.send_message(f"{유저.mention}의 경험치를 찾을 수 없습니다.", ephemeral=True)
-                logging.warning(f"경험치-조회 실패 - {user}\n 유저: {유저.display_name}({유저.id})")
+                await interaction.response.send_message(
+                    f"{유저.mention}의 경험치를 찾을 수 없습니다.", ephemeral=True
+                )
+                logging.warning(
+                    f"경험치-조회 실패 - {user}\n"
+                    f"유저: {유저.display_name}({유저.id})"
+                )
                 return
             경험치 = result[0]
             await interaction.response.send_message(f"{유저.mention}의 경험치는 {경험치}입니다.")
-            logging.info(f"경험치-조회 사용됨 - {user}\n 유저: {유저.display_name}({유저.id}), 경험치: {경험치}")
+            logging.info(
+                f"경험치-조회 사용됨 - {user}\n"
+                f"유저: {유저.display_name}({유저.id}), 경험치: {경험치}"
+            )
         except Exception as e:
             tb = traceback.format_exc()
             logging.error(f"경험치 조회 중 오류 발생: {tb}")
@@ -111,10 +144,18 @@ class ExperienceCommand(commands.Cog):
         user = f"{interaction.user.display_name}[{interaction.user.id}]"
 
         try:
-            cursor.execute(f"SELECT experience FROM users WHERE discord_user_id = {interaction.user.id};")
+            cursor.execute(
+                f"SELECT experience "
+                f"FROM users "
+                f"WHERE discord_user_id = {interaction.user.id};"
+            ) # 경험치 조회
             result = cursor.fetchone()
             if result is None:
-                await interaction.response.send_message("당신의 경험치를 찾을 수 없습니다. 운영진에게 문의해주세요.", ephemeral=True)
+                await interaction.response.send_message(
+                    "당신의 경험치를 찾을 수 없습니다. "
+                    "운영진에게 문의해주세요.",
+                    ephemeral=True
+                )
                 logging.warning(f"경험치-조회 실패 - {user}")
                 return
             경험치 = result[0]
@@ -123,7 +164,9 @@ class ExperienceCommand(commands.Cog):
         except Exception as e:
             tb = traceback.format_exc()
             logging.error(f"경험치 조회 중 오류 발생: {tb}")
-            await interaction.response.send_message("오류가 발생했습니다. 운영진에게 문의해주세요.", ephemeral=True)
+            await interaction.response.send_message(
+                "오류가 발생했습니다. 운영진에게 문의해주세요.", ephemeral=True
+            )
 
 async def setup(bot):
     await bot.add_cog(ExperienceCommand(bot))
