@@ -32,19 +32,19 @@ class ItemCommand(commands.Cog):
         db = shared["DB"]
         command_interaction = interaction
 
-        button1 = Button(label="빨간색🟥", style=discord.ButtonStyle.secondary)
+        button1 = Button(label="빨간색", style=discord.ButtonStyle.secondary, emoji="🟥")
         button1.callback = lambda interaction: button_callback(interaction, 1)
 
-        button2 = Button(label="파란색🟦", style=discord.ButtonStyle.secondary)
+        button2 = Button(label="파란색", style=discord.ButtonStyle.secondary, emoji="🟦")
         button2.callback = lambda interaction: button_callback(interaction, 2)
 
-        button3 = Button(label="초록색🟩", style=discord.ButtonStyle.secondary)
+        button3 = Button(label="초록색", style=discord.ButtonStyle.secondary, emoji="🟩")
         button3.callback = lambda interaction: button_callback(interaction, 3)
 
-        button4 = Button(label="노란색🟨", style=discord.ButtonStyle.secondary)
+        button4 = Button(label="노란색", style=discord.ButtonStyle.secondary, emoji="🟨")
         button4.callback = lambda interaction: button_callback(interaction, 4)
 
-        button5 = Button(label="주황색🟧", style=discord.ButtonStyle.secondary)
+        button5 = Button(label="주황색", style=discord.ButtonStyle.secondary, emoji="🟧")
         button5.callback = lambda interaction: button_callback(interaction, 5)
 
         await interaction.response.defer()

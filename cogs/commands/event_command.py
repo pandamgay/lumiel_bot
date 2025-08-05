@@ -22,7 +22,14 @@ class EventCommand(commands.Cog):
 
         shared = self.bot.shared_data
         user = f"{interaction.user.display_name}[{interaction.user.id}]"
-        await interaction.response.send_message(f"# 이벤트 안내🎁: {제목}\n {설명1}\n {설명2}\n {설명3}\n이 메시지에 ✅를 눌러주시면 이벤트 참여가 완료됩니다.\n@here")
+        await interaction.response.send_message(
+            f"# 이벤트 안내🎁: {제목}\n"
+            f"{설명1}\n"
+            f"{설명2}\n"
+            f"{설명3}\n"
+            f"이 메시지에 ✅를 눌러주시면 이벤트 참여가 완료됩니다.\n"
+            f"@everyone"
+        )
         sent_message = await interaction.original_response()
         shared["event_message_id"] = sent_message.id
         await sent_message.add_reaction("✅")
@@ -39,23 +46,9 @@ class EventCommand(commands.Cog):
         shared["event_message_id"] = None  # 이벤트 메시지 ID 초기화
         await interaction.response.defer()
 
-        # 역할 가져오기
-        role_name = "이벤트 참여자"
-        role = None
-        try:
-            role = discord.utils.get(guild.roles, name=role_name)
-            if role:
-                logging.debug(f"{role_name}: {bool(role)}")
-            else:
-                logging.error(f"역할 '{role_name}'을 찾을 수 없습니다. 역할이 존재하는지 확인해주세요.")
-                raise ValueError(f"역할 '{role_name}'을 찾을 수 없습니다.")
-        except Exception as e:
-            tb = traceback.format_exc()
-            logging.error(f"역할을 가져오는 중 오류 발생: {tb}")
-            return
-
-        # 사용자 필터링
-        members_with_role = [member for member in guild.members if role in member.roles]
+        role = guild.get_role(1388778507617964084) # 역할 가져오기
+        logging.debug(role)
+        members_with_role = [member for member in guild.members if role in member.roles] # 역할을 가진 멤버만 필터링
 
         # 역할 제거
         for member in members_with_role:
@@ -67,11 +60,10 @@ class EventCommand(commands.Cog):
             except Exception as e:
                 tb = traceback.format_exc()
                 logging.error(f"{member.display_name}에게서 역할 제거 중 오류 발생: {tb}")
-
-        if not interaction.response.is_done():
-            await interaction.response.send_message(f"# 이벤트 종료\n현재 이벤트가 종료되었습니다. 참여해주신 모든 분들께 감사합니다.\n{role.mention}")
-        else:
-            await interaction.followup.send(f"# 이벤트 종료\n현재 이벤트가 종료되었습니다. 참여해주신 모든 분들께 감사합니다.\n{role.mention}")
+        await interaction.followup.send(
+            f"# 이벤트 종료\n"
+            f"현재 이벤트가 종료되었습니다. 참여해주신 모든 분들께 감사합니다.\n{role.mention}"
+        )
         logging.info(f"이벤트-종료 사용됨 - {user}")
 
     @app_commands.command(name="이벤트-지정", description="이벤트를 직접 지정합니다.")
@@ -85,7 +77,7 @@ class EventCommand(commands.Cog):
         await interaction.response.send_message("성공적으로 이벤트id가 지정 되었습니다.", ephemeral=True)
         logging.info(f"이벤트-지정 사용됨 - {user}\n 지정된 이벤트 ID: {이벤트id}")
 
-    @app_commands.command(name="랜덤추첨", description="이벤트 참여자 중 랜덤으로 추첨합니다.")
+    @app_commands.command(name="랜덤추첨", description="이벤트 참여자중 랜덤으로 추첨합니다.")
     @app_commands.default_permissions(administrator=True)
     async def randomPeople(self, interaction: discord.Interaction):
 
@@ -93,31 +85,24 @@ class EventCommand(commands.Cog):
         user = f"{interaction.user.display_name}[{interaction.user.id}]"
         guild = self.bot.get_guild(shared["GUILD_ID"])
 
-        # 역할 가져오기
-        role_name = "이벤트 참여자"
-        try:
-            role = discord.utils.get(guild.roles, name=role_name)
-            if role:
-                logging.debug(f"{role_name}: {bool(role)}")
-            else:
-                logging.error(f"역할 '{role_name}'을 찾을 수 없습니다. 역할이 존재하는지 확인해주세요.")
-                raise ValueError(f"역할 '{role_name}'을 찾을 수 없습니다.")
-        except Exception as e:
-            tb = traceback.format_exc()
-            logging.error(f"역할을 가져오는 중 오류 발생: {tb}")
-            return
-
-        # 사용자 필터링
-        members_with_role = [member for member in guild.members if role in member.roles]
+        role = guild.get_role(1388778507617964084) # 역할 가져오기
+        logging.debug(role)
+        members_with_role = [member for member in guild.members if role in member.roles] # 역할을 가진 멤버만 필터링
 
         if not members_with_role:
-            await interaction.response.send_message("현재 이벤트 참여자가 없습니다. 이벤트 참여자를 먼저 모집해주세요.", ephemeral=True)
+            await interaction.response.send_message(
+                "현재 이벤트 참여자가 없습니다. 이벤트 참여자를 먼저 모집해주세요.", ephemeral=True
+            )
             logging.info(f"랜덤추첨 사용 실패 - {user}\n이벤트 참여자가 없음")
             return
 
         # 랜덤 추첨
         winner = random.choice(members_with_role)
-        await interaction.response.send_message(f"# 추첨 결과🎉\n {winner.display_name} 님이 당첨되었습니다!\n {winner.mention}")
+        await interaction.response.send_message(
+            f"# 추첨 결과🎉\n"
+            f"{winner.display_name} 님이 당첨되었습니다!\n"
+            f"{winner.mention}"
+        )
 
         logging.info(f"랜덤추첨 사용됨 - {user}\n 당첨자: {winner.display_name}({winner.id})")
 

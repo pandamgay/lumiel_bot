@@ -40,6 +40,7 @@ import pymysql
 에러 처리는 메시지 보내는 정도 될듯 이거도 재사용성보고 나중에 짤 때 생각하면 됨
 디버그 로그같은거 있음 좋을듯 테스트 로그처럼 해서 테스트로 이거 None인가 아닌가 뭐가들어가나 싶을 때 찍는거
 내가 개좋아하는 :::같은거 넣어서 하면 될듯
+사용자가 db에 존재하는지 검증하는 함수 만들기
 '''
 
 is_infologging = True if input("로그 레벨을 INFO로 설정하시겠습니까? (Y/N): ").lower() in ['y', 'Y'] else False
@@ -123,12 +124,12 @@ async def on_ready():
             logging.debug(f"Command: {command.name}")
 
         # 업데이트/유지보수 중일 때
-        # activity = discord.Activity(
-        # name="업데이트중 | 원활한 이용이 어렵습니다.",
-        # type=discord.ActivityType.playing
-        # )
-        # status = discord.Status.dnd
-        # await bot.change_presence(activity=activity, status=status)
+        activity = discord.Activity(
+        name="업데이트중 | 원활한 이용이 어렵습니다.",
+        type=discord.ActivityType.playing
+        )
+        status = discord.Status.dnd
+        await bot.change_presence(activity=activity, status=status)
 
         # 봇의 상태에서 activity를 제거 (업데이트일땐 X)
         await bot.change_presence(activity=None)

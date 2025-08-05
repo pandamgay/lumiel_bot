@@ -22,7 +22,11 @@ class InviteCommand(commands.Cog):
         logging.info(f"초대정보-추가 사용됨 - {user}\n 초대자: {inviter_id}, 초대된 유저: {invited_member_id}")
 
         try:
-            cursor.execute(f"SELECT * FROM users WHERE discord_user_id = {invited_member_id};")
+            cursor.execute(
+                f"SELECT * "
+                f"FROM users "
+                f"WHERE discord_user_id = {invited_member_id};"
+            ) # 사용자 중복 확인
             result = cursor.fetchone()
 
             if result == None:
@@ -30,9 +34,21 @@ class InviteCommand(commands.Cog):
                 await interaction.response.send_message("초대된 유저가 DB에 존재하지 않습니다.", ephemeral=True)
                 return
 
-            cursor.execute(f"UPDATE users SET inviter_id = {inviter_id} WHERE user_id = {invited_member_id};")
-            cursor.execute(f"UPDATE users SET experience = invite_count + 1 WHERE discord_user_id = {inviter_id};")
-            cursor.execute(f"UPDATE users SET experience = experience + 20 WHERE discord_user_id = {inviter_id};")
+            cursor.execute(
+                f"UPDATE users "
+                f"SET inviter_id = {inviter_id} "
+                f"WHERE user_id = {invited_member_id};"
+            ) # 초대된 유저의 초대자 정보를 저장
+            cursor.execute(
+                f"UPDATE users "
+                f"SET invite_count = invite_count + 1 "
+                f"WHERE discord_user_id = {inviter_id};"
+            ) # 초대자의 초대 횟수 증가
+            cursor.execute(
+                f"UPDATE users "
+                f"SET experience = experience + 100 "
+                f"WHERE discord_user_id = {inviter_id};"
+            ) # 초대자 경험치 부여
             db.commit()
             await interaction.response.send_message(f"{초대된_유저.mention}의 초대정보가 저장되었습니다.")
         except Exception as e:
