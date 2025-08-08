@@ -42,7 +42,7 @@ os.makedirs("logs", exist_ok=True)
 # 로그 설정
 logging.basicConfig(
     level=logging.DEBUG,
-    format='[%(asctime)s] [%(levelname)s] >>> %(message)s',
+    format='[%(asctime)s] [%(levelname)s] ::: %(module)s.%(funcName)s:%(lineno)d >>> %(message)s',
     handlers=[
         logging.FileHandler(f'logs/bot_log_{datetime.now().strftime("%Y%m%d%H%M%S")}.log', mode='w'),
         logging.StreamHandler()

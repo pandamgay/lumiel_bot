@@ -2,3 +2,5 @@
 .env
 auction_command.py
 *.pyc
+/.idea
+/utils
