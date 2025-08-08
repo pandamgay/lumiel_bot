@@ -4,7 +4,7 @@ from discord.ext import commands
 from discord import app_commands
 import traceback
 
-class data_command(commands.Cog):
+class Data_command(commands.Cog):
 
     def __init__(self, bot):
         self.bot = bot
@@ -243,5 +243,5 @@ class data_command(commands.Cog):
 
 
 async def setup(bot: commands.Bot):
-    await bot.add_cog(data_command(bot))
+    await bot.add_cog(Data_command(bot))
     logging.debug("data_command cog가 성공적으로 로드되었습니다.")

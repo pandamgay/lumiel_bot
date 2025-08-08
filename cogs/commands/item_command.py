@@ -225,10 +225,11 @@ class ItemCommand(commands.Cog):
         continuous_attendance_date = result[1] + 1
 
         current_time = datetime.now()
-        fomatted_time = current_time.strftime("%Y-%m-%d %H:%M:%S")
+        formatted_time = current_time.strftime("%Y-%m-%d 00:00:00") # 날짜 단위로 출석 기록
         logging.debug(f"current_time - result[0] ::: {current_time - result[0]}")
 
-        if current_time - result[0] < timedelta(hours=24): # 24시간 이내 출석기록 확인
+        # 연속 출석 검증
+        if current_time - result[0] < timedelta(hours=24):
             logging.debug("current_time - result[0] < timedelta(hours=24)")
             await interaction.response.send_message(
                 f"24시간 이내에 출석을 기록했습니다."
@@ -237,7 +238,7 @@ class ItemCommand(commands.Cog):
             )
             logging.info(f"{user}는 이미 24시간 이내에 출석을 기록했습니다.")
             return
-        elif current_time - result[0] > timedelta(hours=48): # 48시간 초과 출석기록 확인
+        elif current_time - result[0] > timedelta(hours=48):
             logging.debug("current_time - result[0] < timedelta(hours=48)")
             cursor.execute(
                 f"UPDATE users "
@@ -248,7 +249,7 @@ class ItemCommand(commands.Cog):
 
         cursor.execute(
             f"UPDATE users "
-            f"SET recent_attendance_date = '{fomatted_time}' "
+            f"SET recent_attendance_date = '{formatted_time}' "
             f"WHERE discord_user_id = {interaction.user.id};"
         ) # 최근 출석 업데이트
         cursor.execute(
