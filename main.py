@@ -37,6 +37,7 @@ import pymysql
 # TODO: 핸들러 만들기
 '''
 cursor.execute호출 시 요청된 쿼리와 응답을 로그에 기록
+=> 커서 클래스 만들어서 구현
 '''
 
 is_infologging = True if input("로그 레벨을 INFO로 설정하시겠습니까? (Y/N): ").lower() in ['y', 'Y'] else False
