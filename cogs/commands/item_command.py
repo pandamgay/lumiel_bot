@@ -232,7 +232,7 @@ class ItemCommand(commands.Cog):
         if current_time - result[0] < timedelta(hours=24):
             logging.debug("current_time - result[0] < timedelta(hours=24)")
             await interaction.response.send_message(
-                f"24시간 이내에 출석을 기록했습니다."
+                f"오늘 이미 출석을 기록했습니다."
                 f"다음 출석까지 {24 - (current_time - result[0]).seconds // 3600}시간 남았습니다.",
                 ephemeral=True
             )
