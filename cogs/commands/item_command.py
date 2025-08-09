@@ -11,6 +11,7 @@ from discord.ui import Button, View
 class ItemCommand(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
+        self.my_logger = bot.shared_data["LOGGER"]
 
 
     async def autocomplete_options(self, interaction: discord.Interaction, 배율: str):
@@ -48,7 +49,7 @@ class ItemCommand(commands.Cog):
         button5.callback = lambda interaction: button_callback(interaction, 5)
 
         await interaction.response.defer()
-        logging.info(
+        self.my_logger.info(
             f"경험치-도박 사용됨 - {user}\n"
             f"배율: {배율}, 경험치: {경험치}"
         )
@@ -58,7 +59,7 @@ class ItemCommand(commands.Cog):
             await interaction.followup.send(
                 "배율은 '2배' 또는 '5배'만 가능합니다."
             )
-            logging.warning(
+            self.my_logger.warning(
                 f"경험치-도박 사용실패 - {user}\n"
                 f"배율: {배율}, 경험치: {경험치}"
             )
@@ -69,7 +70,7 @@ class ItemCommand(commands.Cog):
             await interaction.followup.send(
                 "2배 도박은 최대 100 경험치까지만 가능합니다."
             )
-            logging.warning(
+            self.my_logger.warning(
                 f"경험치-도박 사용실패 - {user}"
                 f"\n 배율: {배율}, 경험치: {경험치}"
             )
@@ -78,7 +79,7 @@ class ItemCommand(commands.Cog):
             await interaction.followup.send(
                 "5배 도박은 최대 50 경험치까지만 가능합니다."
             )
-            logging.warning(
+            self.my_logger.warning(
                 f"경험치-도박 사용실패 - {user}\n"
                 f"배율: {배율}, 경험치: {경험치}"
             )
@@ -94,7 +95,7 @@ class ItemCommand(commands.Cog):
             result = cursor.fetchone()
             if result is None or result[0] < 경험치:
                 await interaction.followup.send("경험치가 부족합니다.")
-                logging.warning(
+                self.my_logger.warning(
                     f"경험치-도박 사용실패 경험치 부족 - {user}\n"
                     f" 배율: {배율}, 경험치: {경험치}"
                 )
@@ -110,14 +111,14 @@ class ItemCommand(commands.Cog):
             async def button_callback(interaction: discord.Interaction, color: int):
                 # 다른 사용자가 버튼 클릭시 무시
                 if interaction.user.id != command_interaction.user.id:
-                    logging.warning(
+                    self.my_logger.warning(
                         f"{interaction.user.display_name}[{interaction.user.id}]가 "
                         f"다른 사용자의 버튼을 클릭했습니다."
                     )
                     return
                 game_result = self.playGamble(배율, color, 경험치, interaction.user.id)
-                logging.debug(f"color: {color}, game_result: {game_result}")
-                logging.debug(f"game_result: {game_result}")
+                self.my_logger.debug(f"color: {color}, game_result: {game_result}")
+                self.my_logger.debug(f"game_result: {game_result}")
                 match = {
                     1: "빨간색🟥",
                     2: "파란색🟦",
@@ -158,7 +159,7 @@ class ItemCommand(commands.Cog):
 
         except Exception as e:
             tb = traceback.format_exc()
-            logging.error(f"도박 중 오류 발생: {tb}")
+            self.my_logger.error(f"도박 중 오류 발생: {tb}")
             await interaction.followup.send(
                 "오류가 발생했습니다. 운영진에게 문의하세요."
             )
@@ -177,12 +178,12 @@ class ItemCommand(commands.Cog):
                     f"WHERE discord_user_id = {user_id};"
                 ) # 경험치 추가
                 db.commit()
-                logging.info(
+                self.my_logger.info(
                     f"도박 성공 - {experience * 2} 경험치를 획득했습니다. [playGamble]"
                 )
                 return [True, experience * 2, win]
             else:
-                logging.info(
+                self.my_logger.info(
                     f"도박 실패 - {experience} 경험치를 잃었습니다. [playGamble]"
                 )
                 return [False, 0, win]
@@ -195,12 +196,12 @@ class ItemCommand(commands.Cog):
                     f"WHERE discord_user_id = {user_id};"
                 ) # 경험치 추가
                 db.commit()
-                logging.info(
+                self.my_logger.info(
                     f"도박 성공 - {experience * 5} 경험치를 획득했습니다.[playGamble]"
                 )
                 return [True, experience * 5, win]
             else:
-                logging.info(
+                self.my_logger.info(
                     f"도박 실패 - {experience} 경험치를 잃었습니다.[playGamble]"
                 )
                 return [False, 0, win]
@@ -213,7 +214,7 @@ class ItemCommand(commands.Cog):
         cursor = shared["CURSOR"]
         db = shared["DB"]
 
-        logging.info(f"출석-체크 사용됨 - {user}")
+        self.my_logger.info(f"출석-체크 사용됨 - {user}")
 
         cursor.execute(
             f"SELECT recent_attendance_date, continuous_attendance_date "
@@ -221,25 +222,25 @@ class ItemCommand(commands.Cog):
             f"WHERE discord_user_id = {interaction.user.id};"
         ) # 출석 정보 가져오기 => 최근 출석일, 연속 출석일
         result = cursor.fetchone()
-        logging.debug(f"result ::: {result}")
+        self.my_logger.debug(f"result ::: {result}")
         continuous_attendance_date = result[1] + 1
 
         current_time = datetime.now()
         formatted_time = current_time.strftime("%Y-%m-%d 00:00:00") # 날짜 단위로 출석 기록
-        logging.debug(f"current_time - result[0] ::: {current_time - result[0]}")
+        self.my_logger.debug(f"current_time - result[0] ::: {current_time - result[0]}")
 
         # 연속 출석 검증
         if current_time - result[0] < timedelta(hours=24):
-            logging.debug("current_time - result[0] < timedelta(hours=24)")
+            self.my_logger.debug("current_time - result[0] < timedelta(hours=24)")
             await interaction.response.send_message(
                 f"오늘 이미 출석을 기록했습니다."
                 f"다음 출석까지 {24 - (current_time - result[0]).seconds // 3600}시간 남았습니다.",
                 ephemeral=True
             )
-            logging.info(f"{user}는 이미 24시간 이내에 출석을 기록했습니다.")
+            self.my_logger.info(f"{user}는 이미 24시간 이내에 출석을 기록했습니다.")
             return
         elif current_time - result[0] > timedelta(hours=48):
-            logging.debug("current_time - result[0] < timedelta(hours=48)")
+            self.my_logger.debug("current_time - result[0] < timedelta(hours=48)")
             cursor.execute(
                 f"UPDATE users "
                 f"SET continuous_attendance_date = 0 "
@@ -286,10 +287,10 @@ class ItemCommand(commands.Cog):
         view.add_item(no_button)
         await interaction.response.defer()
 
-        logging.info(f"진급-하기 사용됨 - {user}")
+        self.my_logger.info(f"진급-하기 사용됨 - {user}")
 
         user_roles = [role.id for role in interaction.user.roles]
-        logging.debug(user_roles)
+        self.my_logger.debug(user_roles)
 
         cursor.execute(
             f"SELECT experience "
@@ -300,7 +301,7 @@ class ItemCommand(commands.Cog):
 
         member = guild.get_member(interaction.user.id)
         if member is None:
-            logging.error(f"멤버를 찾을 수 없음: {interaction.user.id}")
+            self.my_logger.error(f"멤버를 찾을 수 없음: {interaction.user.id}")
             await interaction.followup.send(
                 "오류가 발생했습니다. <@875257348178980875>에게 문의하세요."
             )
@@ -308,7 +309,7 @@ class ItemCommand(commands.Cog):
 
         if 1383803534973075608 in user_roles:
             if user_exp < 5000:
-                logging.info(f"2단계 진급 실패 - {user}")
+                self.my_logger.info(f"2단계 진급 실패 - {user}")
                 await interaction.followup.send(
                     f"현재 𝓖𝓸𝓵𝓭. 𝓭𝓻𝓪𝓰𝓸𝓷으로 진급하기 위한 경험치가 부족합니다.\n"
                     f"필요 경험치: 5000, 현재 경험치: {user_exp}"
@@ -322,7 +323,7 @@ class ItemCommand(commands.Cog):
                 )
         elif 1383804395720015923 in user_roles:
             if user_exp < 10000:
-                logging.info(f"3단계 진급 실패 - {user}")
+                self.my_logger.info(f"3단계 진급 실패 - {user}")
                 await interaction.followup.send(
                     f"현재 𝓘𝓶𝓹𝓮𝓻𝓲𝓪𝓵. 𝓭𝓻𝓪𝓰𝓸𝓷으로 진급하기 위한 경험치가 부족합니다.\n"
                     f"필요 경험치: 10000, 현재 경험치: {user_exp}"
@@ -335,12 +336,12 @@ class ItemCommand(commands.Cog):
                     view=view
                 )
         elif 1383804879734313058 in user_roles:
-            logging.info(f"진급 실패 - {user}")
+            self.my_logger.info(f"진급 실패 - {user}")
             await interaction.followup.send(f"이미 최고 등급인 𝓘𝓶𝓹𝓮𝓻𝓲𝓪𝓵. 𝓭𝓻𝓪𝓰𝓸𝓷입니다.")
             return
         else:
             if user_exp < 2000:
-                logging.info(f"1단계 진급 실패 - {user}")
+                self.my_logger.info(f"1단계 진급 실패 - {user}")
                 await interaction.followup.send(
                     f"현재 𝓼𝓲𝓵𝓿𝓮𝓻. 𝓭𝓻𝓪𝓰𝓸𝓷으로 진급하기 위한 경험치가 부족합니다.\n"
                     f"필요 경험치: 2000, 현재 경험치: {user_exp}"
@@ -365,10 +366,10 @@ class ItemCommand(commands.Cog):
                     db.commit()
                     role1 = guild.get_role(1383804395720015923)
                     role2 = guild.get_role(1383803534973075608)
-                    logging.debug(f"role1: {role1}, role2: {role2}")
+                    self.my_logger.debug(f"role1: {role1}, role2: {role2}")
                     await member.add_roles(role1)
                     await member.remove_roles(role2)
-                    logging.info(f"2단계 진급 성공 - {user}")
+                    self.my_logger.info(f"2단계 진급 성공 - {user}")
                     await interaction.channel.send(
                         f"{interaction.user.mention}님, 축하합니다! "
                         f"𝓖𝓸𝓵𝓭. 𝓭𝓻𝓪𝓰𝓸𝓷으로 진급되었습니다! 현재 경험치: {user_exp - 5000}"
@@ -386,10 +387,10 @@ class ItemCommand(commands.Cog):
                     db.commit()
                     role1 = guild.get_role(1383804879734313058)
                     role2 = guild.get_role(1383804395720015923)
-                    logging.debug(f"role1: {role1}, role2: {role2}")
+                    self.my_logger.debug(f"role1: {role1}, role2: {role2}")
                     await member.add_roles(role1)
                     await member.remove_roles(role2)
-                    logging.info(f"3단계 진급 성공 - {user}")
+                    self.my_logger.info(f"3단계 진급 성공 - {user}")
                     await interaction.channel.send(
                         f"{interaction.user.mention}님, 축하합니다! "
                         f"𝓘𝓶𝓹𝓮𝓻𝓲𝓪𝓵. 𝓭𝓻𝓪𝓰𝓸𝓷으로 진급되었습니다! 현재 경험치: {user_exp - 10000}"
@@ -406,9 +407,9 @@ class ItemCommand(commands.Cog):
                     ) # 경험치 차감
                     db.commit()
                     role = guild.get_role(1383803534973075608)
-                    logging.debug(f"role: {role}")
+                    self.my_logger.debug(f"role: {role}")
                     await member.add_roles(role)
-                    logging.info(f"1단계 진급 성공 - {user}")
+                    self.my_logger.info(f"1단계 진급 성공 - {user}")
                     await interaction.channel.send(
                         f"{interaction.user.mention}님, 축하합니다! "
                         f"𝓼𝓲𝓵𝓿𝓮𝓻. 𝓭𝓻𝓪𝓰𝓸𝓷으로 진급되었습니다! 현재 경험치: {user_exp - 2000}"
@@ -416,15 +417,16 @@ class ItemCommand(commands.Cog):
                     await channel.send(f"{interaction.user.mention} 님이 𝓼𝓲𝓵𝓿𝓮𝓻. 𝓭𝓻𝓪𝓰𝓸𝓷으로 진급했습니다!")
             except Exception as e:
                 tb = traceback.format_exc()
-                logging.error(f"진급 중 오류 발생: {tb}")
+                self.my_logger.error(f"진급 중 오류 발생: {tb}")
                 await interaction.channel.send("오류가 발생했습니다. <@875257348178980875>에게 문의하세요.")
         async def no_callback(interaction: discord.Interaction):
             await interaction.channel.send("진급이 취소되었습니다.")
-            logging.info(f"{user} 님이 진급을 취소했습니다.")
+            self.my_logger.info(f"{user} 님이 진급을 취소했습니다.")
 
         yes_button.callback = yes_callback
         no_button.callback = no_callback
 
 async def setup(bot):
+    self = ItemCommand(bot)
     await bot.add_cog(ItemCommand(bot))
-    logging.debug("ItemCommand cog가 성공적으로 로드되었습니다.")
+    self.my_logger.debug("ItemCommand cog가 성공적으로 로드되었습니다.")

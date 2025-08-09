@@ -6,6 +6,8 @@ from dotenv import load_dotenv
 import os
 import traceback
 import pymysql
+from utils import my_logger as ml
+from utils import my_curser as mc
 
 # TODO: 스타일 리팩터링
 '''
@@ -34,43 +36,24 @@ import pymysql
 사용자가 db에 존재하는지 검증하는 함수 만들기
 '''
 
-# TODO: 핸들러 만들기
-'''
-cursor.execute호출 시 요청된 쿼리와 응답을 로그에 기록
-=> 커서 클래스 만들어서 구현
-'''
+is_info_logging = True if input("로그 레벨을 INFO로 설정하시겠습니까? (Y/N): ").lower() in ['y', 'Y'] else False
 
-is_infologging = True if input("로그 레벨을 INFO로 설정하시겠습니까? (Y/N): ").lower() in ['y', 'Y'] else False
-
-# 로그 디렉토리 생성
-os.makedirs("logs", exist_ok=True)
-
-# 로그 설정
-logging.basicConfig(
-    level=logging.DEBUG,
-    format='[%(asctime)s] [%(levelname)s] ::: %(module)s.%(funcName)s:%(lineno)d >>> %(message)s',
-    handlers=[
-        logging.FileHandler(f'logs/bot_log_{datetime.now().strftime("%Y%m%d%H%M%S")}.log', mode='w'),
-        logging.StreamHandler()
-    ]
-)
-
-if is_infologging:
-    logging.getLogger().handlers[1].setLevel(logging.INFO)  # StreamHandler의 로그 레벨을 INFO로 설정
+logger = ml.MyLogger(is_info_logging)
+my_logger = logger.initLogger()
 
 # 토큰 로드
 load_dotenv()
 TOKEN = os.environ.get('TOKEN')
 PASSWORD = os.environ.get('PASSWORD')
 if TOKEN:
-    logging.debug("토큰이 성공적으로 로드되었습니다.")
+    my_logger.debug("토큰이 성공적으로 로드되었습니다.")
 else:
-    logging.error("토큰이 로드되지 않았습니다.")
+    my_logger.error("토큰이 로드되지 않았습니다.")
     raise EnvironmentError()
 if PASSWORD:
-    logging.debug("암호가 성공적으로 로드되었습니다.")
+    my_logger.debug("암호가 성공적으로 로드되었습니다.")
 else:
-    logging.error("암호가 로드되지 않았습니다.")
+    my_logger.error("암호가 로드되지 않았습니다.")
     raise EnvironmentError()
 
 intents = discord.Intents.all()
@@ -86,16 +69,14 @@ async def on_ready():
         )
         await bot.change_presence(activity=activity)
 
-        # cogs 로드
-        await load_cogs()
-
         db = pymysql.connect(
             host='127.0.0.1',
             port=3306,
             user='root',
             passwd=PASSWORD,
             db='lumiel_data',
-            charset='utf8'
+            charset='utf8',
+            cursorclass=mc.MyCursor  # 커서 클래스 사용
         )
         cursor = db.cursor()
 
@@ -113,24 +94,28 @@ async def on_ready():
             "is_auction": False,                                 # 경매 활성화 여부
             "current_price": 0,                                  # 현재 경매 가격
             "increase_amount_price": 0,                          # 경매 상승폭
-            "winner_id": 0                                       # 낙찰자 id
+            "winner_id": 0,                                      # 낙찰자 ID
+            "LOGGER": my_logger
         }
+
+        # cogs 로드
+        await load_cogs()
 
         await bot.tree.sync()
         for command in bot.tree.get_commands():
-            logging.debug(f"Command: {command.name}")
+            my_logger.debug(f"Command: {command.name}")
 
         # 업데이트/유지보수 중일 때
-        activity = discord.Activity(
-        name="업데이트중 | 원활한 이용이 어렵습니다.",
-        type=discord.ActivityType.playing
-        )
-        status = discord.Status.dnd
-        await bot.change_presence(activity=activity, status=status)
+        # activity = discord.Activity(
+        # name="업데이트중 | 원활한 이용이 어렵습니다.",
+        # type=discord.ActivityType.playing
+        # )
+        # status = discord.Status.dnd
+        # await bot.change_presence(activity=activity, status=status)
 
         # 봇의 상태에서 activity를 제거 (업데이트일땐 X)
         await bot.change_presence(activity=None)
-        logging.info(f"{bot.user.name} 봇이 성공적으로 초기화되었습니다.")
+        my_logger.info(f"{bot.user.name} 봇이 성공적으로 초기화되었습니다.")
 
 async def load_cogs():
     try:
@@ -141,10 +126,10 @@ async def load_cogs():
         await bot.load_extension("cogs.commands.experience_command")
         await bot.load_extension("cogs.commands.item_command")
         await bot.load_extension("cogs.commands.invite_command")
-        logging.info("cogs가 성공적으로 로드되었습니다.")
+        my_logger.info("cogs가 성공적으로 로드되었습니다.")
     except Exception as e:
         tb = traceback.format_exc()
-        logging.error(f"Cog 로드 중 오류 발생:\n {tb}")
+        my_logger.error(f"Cog 로드 중 오류 발생:\n {tb}")
         await bot.close()
 
 bot.run(TOKEN)

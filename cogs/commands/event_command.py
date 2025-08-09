@@ -9,6 +9,7 @@ class EventCommand(commands.Cog):
 
     def __init__(self, bot):
         self.bot = bot
+        self.my_logger = bot.shared_data["LOGGER"]
 
     @app_commands.command(name="이벤트-생성", description="이벤트를 생성합니다.")
     @app_commands.describe(
@@ -34,7 +35,7 @@ class EventCommand(commands.Cog):
         shared["event_message_id"] = sent_message.id
         await sent_message.add_reaction("✅")
 
-        logging.info(f"이벤트-생성 사용됨 - {user}\n message_id: {sent_message.id}")
+        self.my_logger.info(f"이벤트-생성 사용됨 - {user}\n message_id: {sent_message.id}")
 
     @app_commands.command(name="이벤트-종료", description="이벤트를 종료합니다.")
     @app_commands.default_permissions(administrator=True)
@@ -47,24 +48,24 @@ class EventCommand(commands.Cog):
         await interaction.response.defer()
 
         role = guild.get_role(1388778507617964084) # 역할 가져오기
-        logging.debug(role)
+        self.my_logger.debug(role)
         members_with_role = [member for member in guild.members if role in member.roles] # 역할을 가진 멤버만 필터링
 
         # 역할 제거
         for member in members_with_role:
             try:
                 await member.remove_roles(role)
-                logging.info(f"{member.display_name}에게서 역할 '{role.name}'을 성공적으로 제거했습니다.")
+                self.my_logger.info(f"{member.display_name}에게서 역할 '{role.name}'을 성공적으로 제거했습니다.")
             except discord.Forbidden:
-                logging.error(f"{member.display_name}에게서 역할을 제거할 수 없습니다. 권한을 확인해주세요.")
+                self.my_logger.error(f"{member.display_name}에게서 역할을 제거할 수 없습니다. 권한을 확인해주세요.")
             except Exception as e:
                 tb = traceback.format_exc()
-                logging.error(f"{member.display_name}에게서 역할 제거 중 오류 발생: {tb}")
+                self.my_logger.error(f"{member.display_name}에게서 역할 제거 중 오류 발생: {tb}")
         await interaction.followup.send(
             f"# 이벤트 종료\n"
             f"현재 이벤트가 종료되었습니다. 참여해주신 모든 분들께 감사합니다.\n{role.mention}"
         )
-        logging.info(f"이벤트-종료 사용됨 - {user}")
+        self.my_logger.info(f"이벤트-종료 사용됨 - {user}")
 
     @app_commands.command(name="이벤트-지정", description="이벤트를 직접 지정합니다.")
     @app_commands.default_permissions(administrator=True)
@@ -75,7 +76,7 @@ class EventCommand(commands.Cog):
         shared["event_message_id"] = 이벤트id
 
         await interaction.response.send_message("성공적으로 이벤트id가 지정 되었습니다.", ephemeral=True)
-        logging.info(f"이벤트-지정 사용됨 - {user}\n 지정된 이벤트 ID: {이벤트id}")
+        self.my_logger.info(f"이벤트-지정 사용됨 - {user}\n 지정된 이벤트 ID: {이벤트id}")
 
     @app_commands.command(name="랜덤추첨", description="이벤트 참여자중 랜덤으로 추첨합니다.")
     @app_commands.default_permissions(administrator=True)
@@ -86,14 +87,14 @@ class EventCommand(commands.Cog):
         guild = self.bot.get_guild(shared["GUILD_ID"])
 
         role = guild.get_role(1388778507617964084) # 역할 가져오기
-        logging.debug(role)
+        self.my_logger.debug(role)
         members_with_role = [member for member in guild.members if role in member.roles] # 역할을 가진 멤버만 필터링
 
         if not members_with_role:
             await interaction.response.send_message(
                 "현재 이벤트 참여자가 없습니다. 이벤트 참여자를 먼저 모집해주세요.", ephemeral=True
             )
-            logging.info(f"랜덤추첨 사용 실패 - {user}\n이벤트 참여자가 없음")
+            self.my_logger.info(f"랜덤추첨 사용 실패 - {user}\n이벤트 참여자가 없음")
             return
 
         # 랜덤 추첨
@@ -104,8 +105,9 @@ class EventCommand(commands.Cog):
             f"{winner.mention}"
         )
 
-        logging.info(f"랜덤추첨 사용됨 - {user}\n 당첨자: {winner.display_name}({winner.id})")
+        self.my_logger.info(f"랜덤추첨 사용됨 - {user}\n 당첨자: {winner.display_name}({winner.id})")
 
-async def setup(bot: commands.Bot):
+async def setup(bot):
+    self = EventCommand(bot)
     await bot.add_cog(EventCommand(bot))
-    logging.debug("EventCommand cog가 성공적으로 로드되었습니다.")
+    self.my_logger.debug("EventCommand cog가 성공적으로 로드되었습니다.")

@@ -7,6 +7,7 @@ import traceback
 class InviteCommand(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
+        self.my_logger = bot.shared_data["LOGGER"]
 
     @app_commands.command(name="초대정보-추가", description="사용자의 초대정보를 추가합니다.")
     @app_commands.describe(초대자="초대자를 입력하세요.", 초대된_유저="초대된 멤버를 입력하세요.")
@@ -19,7 +20,7 @@ class InviteCommand(commands.Cog):
         db = shared["DB"]
         inviter_id = 초대자.id
         invited_member_id = 초대된_유저.id
-        logging.info(f"초대정보-추가 사용됨 - {user}\n 초대자: {inviter_id}, 초대된 유저: {invited_member_id}")
+        self.my_logger.info(f"초대정보-추가 사용됨 - {user}\n 초대자: {inviter_id}, 초대된 유저: {invited_member_id}")
 
         try:
             cursor.execute(
@@ -30,7 +31,7 @@ class InviteCommand(commands.Cog):
             result = cursor.fetchone()
 
             if result == None:
-                logging.warning(f"초대된 유저가 DB에 존재하지 않음. - {user}")
+                self.my_logger.warning(f"초대된 유저가 DB에 존재하지 않음. - {user}")
                 await interaction.response.send_message("초대된 유저가 DB에 존재하지 않습니다.", ephemeral=True)
                 return
 
@@ -53,11 +54,12 @@ class InviteCommand(commands.Cog):
             await interaction.response.send_message(f"{초대된_유저.mention}의 초대정보가 저장되었습니다.")
         except Exception as e:
             tb = traceback.format_exc()
-            logging.error(f"초대정보-추가 오류 발생: {tb}")
+            self.my_logger.error(f"초대정보-추가 오류 발생: {tb}")
             await interaction.response.send_message(f"오류가 발생했습니다.\n {tb}")
             return
 
 
 async def setup(bot):
+    self = InviteCommand(bot)
     await bot.add_cog(InviteCommand(bot))
-    logging.debug("InviteCommand cog가 성공적으로 로드되었습니다.")
+    self.my_logger.debug("InviteCommand cog가 성공적으로 로드되었습니다.")
