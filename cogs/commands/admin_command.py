@@ -135,10 +135,14 @@ class AdminCommand(commands.Cog):
         self.my_logger.info(f"봇-종료 사용됨 - {user}")
 
         async def yes_callback(interaction: discord.Interaction):
+            conn = self.bot.shared_data["DB"]
             await message.delete()
-            await interaction.channel.send("봇을 종료합니다.")
-            self.my_logger.info("봇이 종료됩니다.")
-            await self.bot.close()
+            # await interaction.channel.send("봇을 종료합니다.")
+            await interaction.channel.send("응 아니야 DB끊을거야")
+            conn.close()
+            # self.my_logger.info("봇이 종료됩니다.")
+            self.my_logger.info("DB 연결을 종료합니다.")
+            # await self.bot.close()
 
         async def no_callback(interaction: discord.Interaction):
             await message.delete()
